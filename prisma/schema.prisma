@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Product {
+    id          String @id @default(cuid())
+    name        String
+    slug        String
+    description String
+    price       Int
+
+    createdAt   DateTime               @default(now())
+    updatedAt   DateTime               @updatedAt
+    categories  ProductOnCategories[]
+    collections ProductOnCollections[]
+    orderItems  OrderItems[]
+}
+
+model Categories {
+    id       String                @id @default(cuid())
+    name     String
+    products ProductOnCategories[]
+}
+
+model ProductOnCategories {
+    product    Product    @relation(fields: [productId], references: [id])
+    productId  String
+    category   Categories @relation(fields: [categoryId], references: [id])
+    categoryId String
+    assignedAt DateTime   @default(now())
+
+    @@id([productId, categoryId])
+}
+
+model Collections {
+    id       String                 @id @default(cuid())
+    name     String
+    products ProductOnCollections[]
+}
+
+model ProductOnCollections {
+    product      Product     @relation(fields: [productId], references: [id])
+    productId    String
+    collection   Collections @relation(fields: [collectionId], references: [id])
+    collectionId String
+    assignedAt   DateTime    @default(now())
+
+    @@id([productId, collectionId])
+}
+
+model OrderItems {
+    id        String  @id @default(cuid())
+    quantity  Int
+    product   Product @relation(fields: [productId], references: [id])
+    productId String
+    order     Orders  @relation(fields: [orderId], references: [id])
+    orderId   String
+}
+
+enum Status {
+    PENDING
+    COMPLETED
+    CANCELLED
+}
+
+model Orders {
+    id         String       @id @default(cuid())
+    total      Int
+    status     Status
+    orderItems OrderItems[]
+}
